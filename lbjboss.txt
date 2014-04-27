@@ -1,0 +1,255 @@
+Logbuch: JBoss auf dem Raspberry Pi
+
+1. Pi aufsetzen
+Lade das neueste Raspbian-Image herunter. Es handelt sich dabei um ein Debian-
+Wheazzy. 
+Ich verwende das Raspbian mit der Softfloat Unterstützung.
+Diese Versioin sollte für Java und JBoss optimal sein, solange es keine 
+Arm6 Java Versoin mit Hardfloat ABI gibt.
+Download und Brennen des Images unter Windows auf eine SD-Karte.
+
+Karte ins Pi stecken und hochfahren.
+Dabei führt das Pi das Skript raspi-config aus.
+Ausser 
+o Overscan und
+o Overclock
+sollte man sich die einzelnen Punkte mal ansehen.
+Danach das Pi neu booten, damit die Nutzung der kompletten SD-Karte wirksam
+wird.
+Der Konfigurationsprozess kann jederzeit wiederholt werden:
+-------------------
+sudo raspi-config
+-------------------
+
+Dann das Pi auf den neuesten Stand bringen:
+-----------------------
+sudo apt-get update 
+sudo apt-get upgrade
+----------------------
+
+2. Java installieren
+Ich versuche es hier it dem openJDK7.
+Man merkt sich den Namen des Packages und installiert dann mit apt-get:
+----------------------------------
+sudo apt-get install openjdk-7-jdk
+----------------------------------
+Nachfolgend einige Merkmale der Installation:
+----------------------------------
+$PATH zeigt, welche Pfade der Umgebungsvariablen zugeordnet sind:
+/usr/local/sbin:
+/usr/local/bin:
+/usr/sbin:
+/usr/bin:
+/sbin:/bin:
+/usr/local/games:
+/usr/games
+Eine ausführbare Datei wird gefunden, wenn sie in einem dieer Verzeichnisse 
+liegt.
+Wo liegt jetzt das java.exe?
+Im Verzeinis /usr/bin findet man folgendes:
+lrwxrwxrwx 1 root root 22 Mai  6 21:55 java -> /etc/alternatives/java
+lrwxrwxrwx 1 root root 23 Mai  6 21:56 javac -> /etc/alternatives/javac
+lrwxrwxrwx 1 root root 25 Mai  6 21:56 javadoc -> /etc/alternatives/javadoc
+lrwxrwxrwx 1 root root 23 Mai  6 21:56 javah -> /etc/alternatives/javah
+lrwxrwxrwx 1 root root 23 Mai  6 21:56 javap -> /etc/alternatives/javap
+Wenn man unter /etc/alternatives nachsieht, zeigt sich, dass dort auch wieder
+SymLinks stehen, die einen wie folgt weiterleiten:
+/usr/lib/jvm/java-7-openjdk-armel/bin
+Hier oder in Neben- oder Unterverzeichnissen liegen dann die wirklichen 
+Dateien.
+Da /usr/bin im Pfad liegt, kann man sie von überall her aufrufen. 
+
+
+
+2. Java installieren (Alternative)
+Oracle bietet mittlerweile eine Java Version für den Raspi an.
+Noch ist das ein Preview auf Java8.
+Aber dieses Preview ist auf das Pi zugeschnitten und nutzt Hardware des Pis
+zur Fließkommaarithmetik.
+
+Hier sieht die Installation anders aus, weil dieses Preview noch kein offzielles
+Paket in einem Repository ist.
+
+Also:
+- File im Browser suchen und sich die URL merken
+- Verzeichnis einrichten, in das man das Tar-File downloaden will
+mkdir tmp
+  das Verzeinis heißt jetzt so:
+  /home/volker/tmp       auf meinem Debian-Notebook
+cd tmp
+  in das neue Verzeichnis wechseln
+- die Datei runterladen mit wget
+wget http://www.java.net/download/JavaFXarm/\
+            jdk-8-ea-b36e-linux-arm-hflt-29_nov_2012.tar.gz
+  jetzt liegt sie in dem gerade erstellten tmp Verzeichnis
+- auf dem Pi ein entsprechndes Verzeichnis anlengen:
+/home/pi/tmp
+  heißt es bei mir
+- die Datei auf    das Pi schieben:
+sudo scp jdk-8-ea-b36e-linux-arm-hflt-29_nov_2012.tar.gz pi@raspberry1:/home/pi/tmp
+  nach Abfrage der entsprechenden Passworte wird die Datei transferiert
+- Datei auf dem Pi auspacken
+  Bei mir kommt die Installation nach /opt, wie von Oracle vorgeschlagen.
+  zum Auspacken wird das Tar-Tool verwendet:
+sudo tar zxvf jdk-8-ea-b36e-linux-arm-hflt-29_nov_2012.tar.gz -C /opt
+Problem: Wenn man Java im Server-Mode betreiben will, ist diese Version nicht
+geeignet. Im Server Mode werden nur Arm7-Architekturen unterstützt. Das Pi
+läuft aber leider auf einr Arm6 Architekitur. 
+
+2. Embedded Java
+Oracle bietet embedded Java auch für Arm-Prozessoren an.
+Ich versuche es hier mit der ARM Server Version.
+Diese Version unterstützt noch keine Hardware Floating Point Operationen.
+Darum muss auch Debian Weezy mit Mit Soft-Float ABI als Image auf das Pi
+aufgebracht werden.
+Ansonsten funktioniert alles so wie bei der Oracle Preview-Edition von Java8.
+- Java herunterladen
+  Das habe ich über den Browser meines Debian Rechners gemacht. Mit wget 
+  könnte es ein Problem geben, da man erst die Lizenzbestimmungen von Oracle
+  akzeptieren muss.
+  Die Datei liegt jetzt im Verzeichnis:
+  /home/volker/Downloads
+- Datei auf das pi transportieren
+  - Verzeichnis zur Aufnahme der Datei auf dem pi errichten
+    cd /home/pi
+    mkdir Downloads
+  - Datei übertragen
+    auf frodo wechseln und in das Download-Verzeichnis wechseln
+    Datei auf frodo übertragen:
+    sudo scp ejre-7u21-fcs-b11-linux-arm-vfp-server_headless-04_apr_2013.tar.gz \
+             pi@frodo:/home/pi/Downloads
+- Datei auspacken
+  auf frodo wechseln
+  in das Verzeichnis /home/pi/Downloads wechseln
+  Datei entpacken
+  tar -zxvf *.gz   
+- Die Installation nach /opt/java verschieben:
+  sudo mv /home/pi/Downloads/ejre1.7.0_21/ /opt/java/
+- Die Installation ausprobieren:
+  /opt/java/bin/java -version
+  Es erscheint die folgende ausgabe:
+Error occurred during initialization of VM
+Server VM is only supported on ARMv7+ VFP
+ 
+2.a Softlink auf das Java-Home Verzeichnis
+Im Userverzeichnis des Pi-Users lege ich mir einen Softlink in das 
+Stammverzeichnis con Java an.
+Üver so einen Link kann man eichfach schneller navigieren:
+ln -s /usr/lib/jvm/java-7-openjdk-armel/ javahome
+
+3. JBoss installieren
+- zuerst muss JBoss heruntergeladen werden. Das geht wieder mit wget, sobald man 
+  sich die URL von der RedHat-Seite kopiert hat.
+sudo wget http://download.jboss.org/jbossas/7.1/jboss-as-7.1.1.Final/\
+          jboss-as-7.1.1.Final.tar.gz
+- tar file auf das pi kopieren
+  das machen wir wieder mit scp (siehe java Übertragen)
+sudo scp jboss-as-7.1.1.Final.tar.gz pi@raspberry1:/home/pi/tmp
+  passwords für beide Seiten eingeben und schon gehts los...
+- jboss als user anlegen
+  Das ist optional: Wir können auch dem pi user alle Rechte auf den JBoss geben.
+  Aber so würde man es für den jboss user machen:
+sudo adduser jboss
+  password: jboss
+  Full Name: JBoss Manager
+  ...und das adduser tool seine Arbeit machen lassen.
+- JBoss TAR entpacken
+  wir installieren in /usr/local
+sudo tar zxvf jboss-as-7.1.1.Final.tar.gz -C /usr/local
+  danach hat man das ganze Zeug auf der keinen Platte
+  Achtung: wenn man die Option -C vergisst, scheitert der Befehl.
+           -C sorgt dafür, dass nicht vorhandene Verzeichnisse beim 
+           Auspacken angelegt werden.
+- Verzeichniss umbenennen
+cd /usr/local
+sudo mv jboss-as-7.1.1.Final/ jboss7
+  jetzt sieht es etwas glatter aus.
+- dem pi user die Rechte an der JBoss-Installation geben
+sudo chown -R pi:pi /usr/local/jboss7/
+  jetzt ist pi der Besitzer der Installation.
+  Alternativ hätte man dafür auch den jboss user verwenden können.
+- SoftLink (SymLink) auf das Verzeichnis setzen
+  Über einen Softlink läßt sich der Zugriff auf JBoss etwas vereinfachen
+  cd /usr/local
+  sudo ln -s jboss-as-7.1.1.Final jboss7
+  cd /home/pi
+  sudo ln -s /usr/local/jboss7 jboss7
+  Jetzt kann man auch vom Home-Verzeichnis des pi-Users aus direkt in das
+  JBoss-Verzeichnis wechseln.
+
+4. JBoss konfigurieren
+- Standalone Mode
+  Im Standalone-Mode besitzt jede JBoss-Instanz seine eigene standalone.xml.
+  Darum macht es Sinn, diese für alle Instanzen zentral als Basis zur 
+  Verfügung zu haben.
+  Ich habe auf meinem Nas ein JBoss-Verzeichnis eingerichtet, wo ich alles 
+  lagere, was ich zentral sehen will oder an die Pis verteilen möchte.
+  Von da aus kopiere ich die zu verteilenden Dateien zunächst in ein extra 
+  eingerichtetes Downloas-Verzeichnis auf dem Pi:
+  -----
+   sudo scp standalone.xml pi@frodo:/home/pi/Downloads
+  -----
+  - Configuration von frodo nach samwise bringen
+    Da frodo bereits für Messaging konfiguriert ist, und auch einige 
+    Interface-Einträge besitzt, macht es Sinn, die standalone.xml von frodo
+    auch für samwise zu benutzen (mit leichen Änderungen...).
+    - standalone.xml von frodo auf samwise übertragen
+      auf frodo in das entsprechende JBoss Verzeichnis wechseln:
+      .../standalone/configuration 
+
+5. Admin-User anlegen
+Damit man die Management-Konsole verwenden kann, muss man einen Admin-User 
+anlegen.
+Dafür gibt es das Skript add-user.sh im bin-Verzeichnis der Installation.
+ich habe meinen pi-User mit meinem Standasd Passwort eingegeben.
+Die Angaben legt das Skript sowohl unter domain/configuration als auch unter 
+standalone/configuration in der Datei mgmt-users.properties ab.
+
+6. Jboss in Netzwerk verfügbar machen
+Dafür muss in der Standalone.xml die Interface Section verändert ewrden:
+Es ist die IP-Adresse des Pis einzutragen, auf em der JBoss läuft.
+Meine Interface Section sieht wie folgt aus:
+-------------------------------------------------------------------------------
+<interfaces>
+        <interface name="management">
+            <inet-address value="192.168.178.32"/>
+        </interface>
+        <interface name="public">
+            <inet-address value="192.168.178.32"/>
+        </interface>
+-------------------------------------------------------------------------------
+
+Danach kann man die jboos-cli nicht mer so benutzen wie vorher.
+nach der Aufforderung, connecr einzutippen, muss man jetzt folgendes tippen:
+  connect 192.168.178.32
+also die IP-Adresse des Pi dranhängen.
+Beim 2. Versuch klappt es dann in der REgel.
+
+7. Messaging und JMS auf JBoss aktivieren
+Um JMS auf dem JBoss zu verwenden, gibt es 2 Möglichkeiten:
+- standalone-full. xml verwenden
+- standalone.xml um Messaging zu erweitern
+Da der JBoss auf dem Pi laufen soll, erweitere ich die standalone.xml Datei.
+Dazu sind aus der standalone-full.xml einige Einträge zu entnehmen und in die 
+standalone.xml zu integrieren:
+
+
+sub-system ejb: ---------------------------------------------------
+    <mdb>
+      <resource-adapter-ref resource-adapter-name="hornetq-ra"/>
+      <bean-instance-pool-ref pool-name="mdb-strict-max-pool"/>
+    </mdb>
+-------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+

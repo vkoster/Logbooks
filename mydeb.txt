@@ -1,0 +1,36 @@
+Virtuelle Konsolen
+Debian unterstützt 6 virtuelle Konsolen.
+Die erreicht man mit Alt-F1 bis Alt-F6.
+XWindows wird automatisch in der virtuellen Konsole 7 angelegt.
+Um von XWindows auf die Konsole 1 zu kommen, drückt man Strg-Alt-F1
+Zurück zu XWindows geht es mit Alt-F1.
+
+
+Paket Management
+Beispiele: Erlang installieren
+Zuerst muss man die Lokation des Packages dem apt-Tool bekannt geben:
+Dazu editiert man die Datei /etc/apt/sources.list und trägt dort die 
+Lokation ein.
+Dann muss man den Public Key dieser Site dem Apt-System hinzufügen.
+Dazu läd man den Key per wget und pipet ihn in das Tool apt-key add -
+Danach datet man alle Datenbanken up: sudo apt-get update.
+Danach installiert man das Paket: sudo apt-get install esl-erlang
+Das war es dann auch schon.
+
+Raspi XWindow remote steuern
+Das geht mit der Software tightvnc.
+VNC steht für Virtual Network Computing.
+Der tightvnc server ist auf dem Raspberry zu installieren.
+-------------------------------------
+sudo apt-get install tightvncserver
+-------------------------------------
+Auf dem Client ist der View zu installieren:
+------------------------------------------
+sudo apt-get install xtightvncviewer
+------------------------------------------
+Auf dem Server (also dem Pi) tightvncserver starten.
+Der server gibt eine IP und eine Portnummer aus, die man sich merken muss.
+Auf dem Client xtightvncviewer <host>:<port> starten:
+------------------------------------------
+xtightvncviewer paspberry1:1
+------------------------------------------

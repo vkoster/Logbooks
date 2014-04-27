@@ -1,0 +1,115 @@
+LBXBMC
+
+Mein Logbuch für den Umgang mit XBMC
+(Vielleicht kann man den ganzen Kram ja mal skripten :-)
+
+1. Image aufbringen
+XBMC kommt mit seinem eigenen Betriebssystem: raspbm.
+Ein Image bekommt man auf raspbmc.com.
+Ich nehme inmmer den Net-Installer.
+tar-file: installer.img.gz
+Image: base
+Image auf eine Karte bringen, ins Pi stecken und das Pi mit Strom versorgen.
+Danach macht der Installer den Rest und zieht sich alles aus dem Netz.
+
+2. Konfiguration
+Die Konfiguration erfolgt auf 2 Ebenen: XBMC und Raspbmc.
+- xbmc konfigurieren
+Menü: (System)(Settings)
+      - Appearance
+        hier ändert man
+        - time zone
+        - keyboard
+- Raspbmc konfigurieren
+Menü: (Programms)(Raspbmc Settings)
+      hier ändert mn i.d.R.:
+      - auto update
+      - wireless (mach ich nicht, alls über Lan)
+      - Passwort für den Pi user (setze ich so wie immer)
+  Raspbmc merkt, dass es noch nicht konfiguriert wurde und fragt die 
+  Konfiguration beim nächsten Hochfahren automatisch ab. 
+
+3. Add-ons installieren
+XBMC basiert fast ausschließlich auf einem Add-on Konzept.
+Add-ons kommen aus Repositories.
+Repositories sind
+- Standard Repositories
+  die sind nach der Installation sofort verfügbar
+- Externe Repositories
+  die muss man dem XBMC erst noch bekannt machen.
+
+- Aus dem Standard Repository heruas installieren
+Menü: (System)(Settings)(Add-ons)
+      - Get Add-ons
+      - XBMC.org Add-ons
+      - Installiere, was du willst
+      coole Addons sind:
+      - MyVideo
+      -
+
+- Weitere Repositories zu XMC hinzufügen
+Es gibt sehr viele inoffizielle XMC-Repositories.
+Diese müssen selbst erst installiert werden, bevor man die Add-ons installieren
+kann.
+Dafür gibt es zwie Wege:
+1. Neues Repository als ZIP installieren
+oder
+2. den Repositori Installer (selber ein ZIP) installieren
+   (Der basiert auf dem Wiki der inoffiziellen Repositories und kann diese 
+   dann installieren)
+- Repository Installer (zip) installieren
+  - Zip-Datei herunterladen und per Stick dem Pi zugänglich machen
+  - Zip installieren
+    Menü: (System)(Settings)(Add-ons)
+          (Install from Zip file)
+          Jetzt das Verzeinis suchen, in das Linux den Stick gemountet 
+          hat: /media/....
+  - Unter (Get Add-ons) sollte jetzt das neue Repository zur Auswahl zur
+    Verfügung stehen
+- Add-on per Zip installieren
+  - Zip Datei herunterladen und auf den Stick bringen
+  - Zip installieren
+    Menü: (System)(Settings)(Add-ons)
+          (Install from Zip File)
+          Zip im Linux-Verzeichnisbaum suchen:
+    Das neue Add-on sollte entweder unter Videos oder unter Musik als Add-on
+    zu finden sein.
+
+4. Fusion
+Fusion ist der neue "Easy Add-on Installer" des XBMC-Projekts.
+Fusion ermöglicht das Installieren von Add-on Repositories ohen diese vorher
+als Zips bereitstellen zu müssen.
+- Fusion installieren
+  Menü: (System)(File Manager)(Add Source)
+  In das Textfeld, in dem noch "None" steht, muss die folgende URL eingegeben 
+  werden: http://fusion.xbmchub.com
+  Danach Done klicken.
+  Dann Namen für die Media Source eingeben: "fusion" und "Done" klicken.
+  OK klicken und fertig.
+- Add-ons über Fusion installieren
+  Menü: (System)(Settings)(Add-ons)(Install from Zip)(fusion)
+  Jetzt auswählen, was man haben will.
+- Wählt man z.B. ein Repository aus, ist danach nur erst mal das Repository 
+  angebunden. Add ons aus diesem Repository muss man dann separat installieren.
+- Add ons installieren
+  Auf einen der (Get Add ons) Buttons klicken
+  Repository aussuchen
+  sich bis zu dem gewünschten Add on durchklicken und es installieren.
+
+5. NAS anbinden
+Ich konnte alle meine MP3s per Stick aus dem Debian Rechner auf einen Ordner
+im NAS kopieren.
+Der gesamte Stick ist als Windows-Filessystem (Samba SMB) freigegeben.
+- NAS als Quelle in XBMC hinzufügen
+  (Musik)(Addons)(Quelle hinzufügen)
+  Danach einfach auf den Oedner gehen, die MP3s enthält und die zu spielenden
+  Titel auswählen
+
+6. File Plugin installieren
+Ich habe auf dem pi ein Verzeichnis angelegt, in das ich die Plugins als ZIP
+schieben kann.
+- Verzeinis anlegen
+  cd /home/pi
+  mkdir Downloads
+- Add-on auf das pi schieben
+  sudo scp plugin.video.xstream_2.0.17.zip pi@gandalf:/home/pi/Downloads

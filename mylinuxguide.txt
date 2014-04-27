@@ -1,0 +1,669 @@
+===============================================================================
+1 SYSTEM HERUNTERFAHREN 
+===============================================================================
+Das System wird mit dem Befehl shutdown heruntergefahren.
+Die -h Option sorgt dafür, dass zunächst ein kill -15 
+und dann ein kill -9 Signal herumgeschickt wird.
+Damit liefert die -h Option einen "Graceful Shutdown".
+
+--------------------
+shutdown -h now
+--------------------
+Sorgt für einen "graceful shutdown".
+Danach muss der Rechner von Hand ausgeschaltet werden.
+
+-------------------
+shutdown -h-P now
+-------------------
+Fährt den Rechner runter und schaltet den Strom aus.
+
+-------------------
+shutdown -r  now
+-------------------
+Re-bootet das System.
+
+-------------------
+shutdown -rF now
+-------------------
+Führt einen Filesystem-Check durch und re-bootet das System. 
+
+Eine weiter Methode ist der Befehlt halt.
+Den kann man mit der Option -p (poweroff) dazu verwenden, den Rechner auch 
+abzuchalten.
+-----------
+halt -p
+-----------
+
+Weiter Befehle:
+o poweroff
+o reboot
+
+Weitere Befehler
+o init 0		bringt den Rechner zum halt
+o init 6		leitet Re-Boot ein
+
+===============================================================================
+2 SUDO EINRICHTEN 
+===============================================================================
+WOFÜR IST SUDO GUT?
+Der Befehl sudo löst folgendes Problem:
+Viele Aktionen mÃ¼ssen unter Linux mit root-Rechten ausgeführt werden. 
+Gleichzeitig wird ein Linux-System häufig von mehreren Administratoren 
+verwaltet. 
+Das Problem:
+o Das root-Passwort will man möglichst wenigen Personen anvertrauen
+o Als Administrator will man nicht immer per "switch user (su)" als root agieren
+Sudo arbeitet auf einer Datei, in der man User hinterlegt, die dann mit 
+root-Rechten agieren.
+Diese User authentifizieren sich bei sudo mit ihrem eigenen Passwort.
+Sudo protokolliert dann, was ein User mit den root-Rechten angestellt hat.
+Fazit: sudo ermöglicht das Sharing der root-Rechte, ohne das root-Kennwort 
+zu veraten.
+
+WIE RICHTET MAN SUDO EIN?
+In einer Debian-Distribution ist die o.g. Rechte-Datei nach der Installation 
+leer.
+Um sudo benutzen zu können, muss diese Datei gefüllt werden.
+Die Pflege erfolgt über das Programm visudo.
+Man ruft den Befehl in der Shell mit root-Rechten auf.
+D.h. man muss einmal mit su roor-Rechte erlangen.
+Es öffnet sich der Editor, der in der Environment Variable EDITOR hinterlegt 
+ist: 
+Bei Debian ist das nano.
+Die Datei, die dann geöffnet wird, heißt /etc/sudoers.
+Sie hat viel Rubriken, da man hier noch jede Menge mehr machen kann, als einem 
+User 
+root-Rechte zu gewähren.
+Um aber genau das zu machen, trägt man folgende Zeile in die User-Rechte 
+Rubrik ein:
+--------------------------
+<user> ALL=(ALL) ALL
+--------------------------
+Der komplette Ablauf sieht dann wie folgt aus:
+$ su 			// root-Passwort eingeben und root werden
+$ visudoers		// nano-Editor öffnet die Datei
+<user> ALL=(ALL) ALL 	// unter der Rubrik User-Rechte eingeben
+// Speichern und Editor verlassen 
+Ab jetzt kann der User Befehler mit root-Rechten wie folgt ausführen:
+$ sudo putty 		// Passwort des Users wird noch einmal abgefragt
+
+===============================================================================
+3 REMOTE ZUGRIFF AUF RECHNER IM NETZ ERMÖGLICHEN 
+===============================================================================
+SSH ZUGRIFF ERMÖGLICHEN
+Es gibt den Client (ssh) und den Server (sshd).
+Das d steht für Daemon.
+
+FESTSTELLEN OB SSHD LÄUFT
+--------------------------
+ps -A | grep ssh
+  ps   listet alle Prozesse, die gerade laufen
+  -A   selektiert alle Prozesse
+  |    piped den Output von ps in den Input von grep 
+  grep sucht in jeder Zeile des Inputs nach einem Muster (hier ssh)
+       wenn das Muster in der Zeile vorkommt, wird die Zeile ausgegeben
+-----------------------------------------------------------------------
+
+ZERTIFIKATSPROBLEME LÖSEN
+Da ich auf für mein Raspi mit verschiedenen Images arbeite und jedes dieser 
+Images ein anderes
+Sicherheitszertifikat generiert, wenn es sich gegenüber einem ssh Client ausweist, 
+bekommt man beim ssh-Connect Fehlermeldungen.
+SSH Cleint merkt sich in einer Tabelle die MAC-Adresse des Raspi und das Zertifikat 
+mit dem es sich schon mal ausgewiesen hat.
+Wenn das passiert, muss man die entsprechende Datei öffnen 
+(in der Fehlermeldung steht, welche es ist) und den Eintrag komplett löschen.
+Danach wird das neue Zertifikat akzeptiert.
+
+In seiner einfachsten Form geht der Befehl so:
+---------------------
+ssh benutzer@hostname
+ssh pi@frodo
+---------------------
+
+===============================================================================
+4 PROZESS ABBRECHEN 
+===============================================================================
+Prozesse bricht man mit dem kill-Befehlt ab.
+Prozesse bricht man aus folgenden GrÃ¼nden ab:
+o Prozess ist eingefroren und reagiert nicht mehr
+o Prozess lÃ¤sst sich nicht mehr auf regulÃ¤re Art abbrechen
+o Prozess verhÃ¤lt sich nicht mehr kontrollierbar
+Um einen Prozess zu killen, braucht man folgendes:
+o Die PID des Prozesses
+o Root-Rechte (oder man ist selber der Owner)
+Kill sendet Signale an den betreffenden Prozess.
+Eine Liste der zur Verügung stehenden Signale bekommt man mit kill -l.
+Jedes Signal hat eine Signal-Number. Die kann man gezielt an den Prozess senden:
+-----------------------------------------------------------
+kill -15 4711 (15 steht für default kill signal)
+-----------------------------------------------------------
+Das stärkste Signal ist die 9: kill sofort, ohne aufzuräumen. 
+Sollte so sparsam wie möglich verwendet werden.
+
+===============================================================================
+5 ZUGRIFFSRECHTE VERÄNDERN 
+===============================================================================
+Jede Datei wird bei ls -l wie folgt dargestellt (ohne die Blanks):
+d rwx rwx rwx 
+Der erste Buchstabe zeigt an, ob es ich um eine Datei oder eine 
+Verzeichnis handelt (d=Directory, _=Datei)
+Die erste 3er Gruppe zeigt die Rechte des Benutzers
+Die zweite 3er-Gruppe zeigt die Rechte aus Gruppenzugehörigkeit
+Die dritte 3er-Gruppe zeigt die Rechte, die jeder hat (World oder Others)
+Jedes Recht ist mit einer Zahl belegt, die sich aus dem Dualsystem ableitet. 
+Die drei Zahlen einer Gruppe addiert ergeben das Recht dieser Gruppe.
+Um alle Rechte einer Gruppe zu aktivieren, braucht man auf allen Positionen eine 1:
+rwx
+111
+Daraus ergeben sich fÃ¼r die Einzelrechte folgende Zahlen:
+ x = 001	= 1
+ w = 010	= 2
+ r = 100	= 4
+Alle Rechte einer Gruppe zu setzen hat den Wert 1+2+4 = 7.
+Alle Rechte aller Gruppen zu setzen: 777
+Zugriffsrechte werden über diese Zahlen verändert, mit dem Befehl chmod:
+----------------------
+chmod 777 test.txt
+-R	// Verzeichnis rekursiv nach unten gehen
+-------------------------------------------------
+Gewährt alle Rechte für alle Gruppen.
+
+===============================================================================
+6 NEUEN USER ANLEGEN 
+===============================================================================
+Normalerweise geht das über die Befehle useradd und groupadd.
+Debian hat besonders komfortable Befehle dafür: adduser
+
+===============================================================================
+7 VERSIONEN HERAUSFINDEN 
+===============================================================================
+Da praktisch jedes Linux Gerät durch eine Datei beschrieben wird, bekommt man viele 
+Informationen einfach durch das Ansehen dieser Dateien.
+----------------------
+cat /proc/version  
+----------------------
+Liefert die Version des Betriebssystems
+
+-----------------------------
+cat /proc/cpuinfo
+-----------------------------
+Liefert Auskunft über die CPU / Board Version. 
+
+===============================================================================
+8 PAKETE INSTALLIEREN 
+===============================================================================
+Pakete sind eine Alternative zum Download und Installieren von Hand.
+Sie sind:
+o Schon kompiliert
+o Alle Dateien liegen in den richtigen Verzeichnissen
+o Alle notwendigen Voraussetzungen (andere Pakte) werden automatisch 
+  (und transitiv) mitinstalliert
+o Installationsskripte konfigurieren die Software oft noch automatisch
+Pakete werden in Web-Repositories verwaltet und von Paket Managern
+o gesucht
+o geladen 
+o installiert
+o deinstalliert
+Verschiedene Linux-Distros verwenden unterschiedliche Package Manager:
+o Solaris			.pkg
+o RedHat			.rpm
+o Debian			.deb
+Ein Package Manager ist nicht nur eine einzige Software, 
+sondern das Zusammenspiel verschiedener Tools:
+o apt		der hauptsÃ¤chliche Package Manager in Debian
+o dpkg		der VorgÃ¤nger von apt (wird aber immer noch 
+                    wegen einiger Features benutzt)
+o dselect	Menü getriebenes Frontend, hinter dem apt und dpkg arbeiten
+Bei der Installation scannt Debian die Installatins CDs und baut lokal eine 
+Datenbank der verfügbaren Pakte auf. Die vollstÃ¤ndige Liste aller verfügbarer 
+Pakete findet man im Netz unter:
+--------------------------------
+packages.debian.org/stable/
+--------------------------------
+Apt und dpkg benutzt man, wenn man ungefähr weiß, was man will.
+Um über alle Pakte zu browsen und sie mal durchzusehen, ob etwa interessantes 
+dabei ist, benutzt man dselect.
+Obwohl man die Pakete auch mit dselect installieren kann, geht das viel besser 
+und schneller mit den verschiedenen apt Tools.
+Aber da das Browsen der Pakete so viel Spass macht und immer wieder neue 
+Nuggets ans Tageslicht fördert, lohnt es sich, dselect zu kennen.
+
+DSELECT 
+APT
+Apt ist der Oberbegriff für eine ganze Reihe von Tools, die sich alle 
+damit beschäftigen, die Installation aktuell zu halten.
+Die apt-Tools werden zentral über die Datei
+-------------------------
+/etc/apt/sources.list
+-------------------------
+gesteuert.
+In dieser Datei sind alle Lokationen gespeichert, von denen man Packages 
+beziehen kann.
+Beachte: Nach einer Installation von DVD sind die Internet-Lokationen evtl. 
+auskommentiert. Darum sollte man darauf achten, diese Einträge wieder zu 
+enablen:
+-----------------------------------------------------------------------
+deb http://security.debian.org/ stable/updates main
+deb http://http.non-us.debian.org/debian stable main contrib non-free
+-----------------------------------------------------------------------
+
+Ein update des Systems erfolgt jetzt in zwei Schritten:
+1. Package Datenbank aktualisieren: sudo apt-get update
+2. Packages herunterladen und installieren: sudo apt-get upgrade -u
+(-u sorgt für ausführliche Ausgaben zu den installierten Pakten)
+
+Manche Pakete findet man nicht in den offiziellen Directories.
+In diesem Fall geht man wie folgt vor:
+	Beispiele: Erlang installieren
+	Zuerst muss man die Lokation des Packages dem apt-Tool bekannt geben:
+	Dazu editiert man die Datei /etc/apt/sources.list und trägt dort die 
+	Lokation ein.
+	Dann muss man den Public Key dieser Site dem Apt-System hinzufügen.
+	Dazu läd man den Key per wget und pipet ihn in das Tool apt-key add -
+	Danach datet man alle Datenbanken up: sudo apt-get update.
+	Danach installiert man das Paket: sudo apt-get install esl-erlang
+	Das war es dann auch schon.
+
+
+
+================================================================================
+9 RASPI IMAGESI 
+================================================================================
+RASPBIAN
+Das Raspbian Image ist ein auf das Rpi abgestimmtes Debian.
+Es gibt zwei Varianten:
+o Raspbian Wheezy
+o Soft Float Debian Wheezy
+
+RASPBMC IMAGE
+Das Raspbmx Image besteht aus einem Minimal Raspbian
+
+===============================================================================
+10. NAS MOUNTEN 
+===============================================================================
+ES sollte mit folgedem Befehl unktionieren:
+-----------------------------------------
+mount -t cifs //192.168.178.1/Fritz!nas /etc/media
+---------------------------------------------------
+Um bei meiner Fritzbox direkt auf den USB-Stick zu kommen, muss folgendes
+eingetragen werden:
+----------------------------------------------------
+mount -t cifs //192.168.178.1/Fritz!nas/UDISK-PDA01-8GCBJ2-0-01 /etc/media
+---------------------------------------------------------------------------
+Achtung: ggf. muss cifs per apt-get erst noch installiert werden.
+
+Eine Alternative ist, das NAS unter Samba zu mounten.
+Dazu mssen die Samba-Befehle installiert sein:
+---------------------------------------------
+sudo apt-get install smbfs
+----------------------------------------------
+Dann muss ein Platz im Verzeichnisbaum definiert werden, in dem die 
+Verzeichnisse gemountet werden sollen:
+----------------------------------
+sudo mkdir /media/music
+sudo mkdir /media/film
+etc.
+----------------------------------
+Danach, wie oben beschrieben mounten.
+
+MOUNT PERMANENT MACHEN
+Dazu muss ein Eintrag in die Tabelle fstab gemacht werden:
+--------------------------------------
+sudo gedit /etc/fstab
+--------------------------------------
+oder
+--------------------------------------
+sudo vi /etc/fstab
+--------------------------------------
+Dort werden dann die Parameter des manuellen mount-Befehls eingetragen:
+---------------------------------------------------------------------
+//192.168.178.1/Fritz!nas/UDISK-PDA01-8GCBJ2-0-01 /media/music smbfs
+---------------------------------------------------------------------
+
+MEIN NAS MOUNTEN
+So habe ich es konkret gemacht:
+----------------------------------------------------------------------------------
+sudo mount -t smbfs //192.168.178.1/FRITZ.NAS/UDISK-PDA01-8GCBJ2-0-01 /media/fritz
+----------------------------------------------------------------------------------
+Die Namen, unter denen die Fritzbox das Verzeichnis freigegeben hat, 
+muss man in den Einstellungen der Fritz.box nachsehen.
+
+Nach Update der FritzBox auf die neueste Firmware:
+1. Ich hab die Fritzbox in PepperNet umbenannt
+   Die Fritzbox hat das Freigabeverzeichnis daruafhim in PEPPERNET umbenannt
+   Das muss man beim mounten bachten
+2. Für den Zugriff auf das Freigabelaufwerk braucht man jetzt Credentials
+   unter /etc/samba die Datei auth anlegen
+   und folgendes reinschreiben:
+     username=ftpuser
+     password=
+   Das password braucht nicht angegeben werden, wenn es auch in der Fritz Box
+   fehlt (FritzBox-System-FritzBox Benutzer)
+   auf diese Datei muss man Bezug nehmen, wenn man den Eintrag in die fstab 
+   macht:
+---------------------------------------------------------------------------------
+//192.168.178.1/PepperNet/UDISK-PDA01-8GCBJ2-0-01 /media/fritz smbfs credentials=/etc/samba/auth
+---------------------------------------------------------------------------------
+   beim Booten wir das NAS jetzt automatisch gemountet
+3. man kann das mounten der Laufwerke aus der fstab auch von der Konsole aus
+   erzwingen:
+   -------------------
+   sudo mount -a
+   -------------------
+4. mount Verzeichnis
+   Das Verzeichnis, in das man das Devic (hier USB-Stick) mounten will, muss
+   bereits existieren.
+   Also: zuerst under /media das Verzeichnis /media/fritz anlegen. Erst dann
+   klappt der mount-Befehl
+
+===============================================================================
+11 CHARACTER ENCODING ÄNDERN 
+===============================================================================
+ENCODING HERAUSFINDEN
+So findet man heraus, wie eine Datei encodet ist:
+---------------------------------------
+file -bi <filename>
+----------------------------------------
+
+ENCODING ÄNDERN
+So ndert man das ENCODING einer Datei:
+----------------------------------------------------
+iconv -c -f ascii -t utf8 <originalfile> > <newfile>
+o -c    sorgt dafür, dass nicht konvertierbare Zeichen wegfallen, ohne einen
+        Fehler zu produzieren
+----------------------------------------------------
+Dabei wird eine neue Datei erstellt, während die alte Datei erhalten bleibt.
+Es geht aber auch "in place":
+----------------------------------
+recode UTF-8 -f <filename>
+o -f    sorgt dafr, dass nicht konvertierbare Zeichen wegfallen, ohne einen
+        Fehler zu produzieren
+----------------------------------
+
+===============================================================================
+12. NACH INSTALLIERTEM PACKAGE SUCHEN 
+===============================================================================
+Nach einem installiertem Paket sucht man mit dem dpkg Befehl.
+Da die Liste der installierten Pakete in der Regel sehr lang ist, piped
+man den Qutput der Suche nach grep und sucht nach dem gesuchten Paket.
+-------------------------------------------
+dpkg --get-selections | grep openjdk
+-------------------------------------------
+
+===============================================================================
+13. DATEIEN FINDEN 
+===============================================================================
+Dateien findet man mit dem find-Befehl.
+Wenn man einen Teil des Namens kennt, sucht man mit der -name Option
+---------------------
+find /usr -name java
+---------------------
+
+===============================================================================
+14. DAS ALTERNATIVES SYSTEM 
+===============================================================================
+Das alternatives System ermöglicht es, mehrere Systeme, die das gleiche leisten, parallel zu 
+installieren und zu betreiben.
+Das alternatives-System basiert auf doppelter Indirektion (mittles symbolic-
+links).
+Der erste SL zeigt auf 
+In der Regel reicht es nicht, nur das Executable zu redirecten.
+Auch andere Programme müssen gleichzeitig mitumgelenkt werden, damit alles 
+konsistent bleibt.
+Darum gibt es Slave SLs, die zusammen mit dem Master SL eine P
+Hier meine vi Installation
+---------------------------------------------------------------
+volker@debian:~$ update-alternatives --display vi
+vi - auto mode
+  link currently points to /usr/bin/vim.basic
+/usr/bin/vim.basic - priority 30
+  slave vi.1.gz: /usr/share/man/man1/vim.1.gz
+  slave vi.fr.1.gz: /usr/share/man/fr/man1/vim.1.gz
+  slave vi.it.1.gz: /usr/share/man/it/man1/vim.1.gz
+  slave vi.pl.1.gz: /usr/share/man/pl/man1/vim.1.gz
+  slave vi.ru.1.gz: /usr/share/man/ru/man1/vim.1.gz
+/usr/bin/vim.tiny - priority 10
+  slave vi.1.gz: /usr/share/man/man1/vim.1.gz
+  slave vi.fr.1.gz: /usr/share/man/fr/man1/vim.1.gz
+  slave vi.it.1.gz: /usr/share/man/it/man1/vim.1.gz
+  slave vi.pl.1.gz: /usr/share/man/pl/man1/vim.1.gz
+  slave vi.ru.1.gz: /usr/share/man/ru/man1/vim.1.gz
+Current 'best' version is '/usr/bin/vim.basic'.
+------------------------------------------------------------------
+vi ist also ein SL, der auf /usr/bin/vim.basic zeigt.
+Das ist selber ein SL, der auf zwei Programme zeigt:
+/usr/bin/vim.basic     und
+/usr/bin/vim.tiny
+Tatsächlich aufgerufen wird vim.basic, da dieses Ziel die höhere Priorität
+besitzt: 30.
+
+===============================================================================
+15. FILE DOWNLOAD aus DEM INTERNET
+===============================================================================
+Files aus dem Web kann man mit Hilfe des Befehls wget herunterladen, wenn man 
+die URL der Ressource kennt.
+----------------------------------------------------
+wget http://www.java.net/download/JavaFXarm....tar.gz
+-----------------------------------------------------
+läd die Datei ins aktuelle Verzeichnis.
+Parameter (Auswahl)
+-----------------------------------------------------------------
+-r              für rekursives Downloaden einer kompletten Web-Site
+-A pdf, jpg...  zum Eingrenzen des Downloads auf bestimmte Typen
+-r -l2          zum Eingrenzen der Rekursiv-Level (Default ist 5)
+--------------------------------------------------------------------
+
+===============================================================================
+16. FILE TRANSFER IM LINUX NETZ
+===============================================================================
+Um Dateien sicher zwischen Linux-Rechnern zu transportieren, kann man den 
+Befehl scp benutzen.
+scp steht für Secure Copy.
+scp ist Bestandteil des ssh-Paketes.
+er Befehl sieht wie fooolgt aus:#
+-------------------------------------------------------------------------------
+scp [[user@]from-host:]source-file [[user@]to-host:][destination-file]
+  from-host
+    Host-Adr des Quell-Rechners (weglassen, wenn das der Rechner ist, auf dem
+    man gerade lokal ist
+  user
+    User-Name mit den jeweils richtigen Rechten
+  source-file
+    Datei oder Dateien, die transferiert weren sollen
+  destination-file
+    Name der Zieldatei (wenn man den wegläßt, behält die Datei ihren Namen
+
+Optionen
+  -P  Beibehalten (Preserve) von Access-Time, Rechten etc.
+  -q  keinen Progress-Bar anzeigen
+  -r  Verzeichnisse rekursiv kopieren
+--------------------------------------------------------------------------------
+
+===============================================================================
+17. TAR BENUTZEN
+===============================================================================
+tar ist de Linux-Variante von Zip oder Unzip usw.
+tar wird wie folgt aufgerufen:
+---------------------------------------------------------------------------------
+tar <function-letters> 
+
+===============================================================================
+17. LOCALES UMSTELLEN
+===============================================================================
+- locales Einstellungen heruasfinden
+-----------------
+locale
+----------------
+Ergibt auf meinem Raspbian und auf meinem Debian folgendes Ergebnis:
+LANG=en_GB.UTF-8
+LANGUAGE=
+LC_CTYPE="en_GB.UTF-8"
+LC_NUMERIC="en_GB.UTF-8"
+LC_TIME="en_GB.UTF-8"
+LC_COLLATE="en_GB.UTF-8"
+LC_MONETARY="en_GB.UTF-8"
+LC_MESSAGES="en_GB.UTF-8"
+LC_PAPER="en_GB.UTF-8"
+LC_NAME="en_GB.UTF-8"
+LC_ADDRESS="en_GB.UTF-8"
+LC_TELEPHONE="en_GB.UTF-8"
+LC_MEASUREMENT="en_GB.UTF-8"
+LC_IDENTIFICATION="en_GB.UTF-8"
+LC_ALL=
+
+Auf meinem Raspbmc sieht es leider anders aus:
+LANG=
+LANGUAGE=
+LC_CTYPE="POSIX"
+LC_NUMERIC="POSIX"
+LC_TIME="POSIX"
+LC_COLLATE="POSIX"
+LC_MONETARY="POSIX"
+LC_MESSAGES="POSIX"
+LC_PAPER="POSIX"
+LC_NAME="POSIX"
+LC_ADDRESS="POSIX"
+LC_TELEPHONE="POSIX"
+LC_MEASUREMENT="POSIX"
+LC_IDENTIFICATION="POSIX"
+LC_ALL=
+
+Das Raspberry Config-Script raspi-config zeigt, wie es geht:
+- Das richtige Keyboard auswählen
+-----------------------------------------
+dpkg-reconfigure keyboard-configuration 
+-----------------------------------------
+- Die locales einstellen
+-----------------------------------------
+dpkg-reconfigure locales
+----------------------------------------
+- Die Zeitzone einstellen
+----------------------------------------
+dpkg-reconfigure tzdata
+---------------------------------------
+
+===============================================================================
+18. Systeminformationen anzeitgen
+===============================================================================
+- Memory-Informationen anzeigen
+  Dazu gibt es eine ganze Reihe von Befehlen
+---------------------------------
+free // zeigt Speicher in KB an
+-m   // zeigt Speicher in MB an
+-g   // zeigt Speicher in GB an
+--------------------------------
+less /proc/meminfo
+     // zeigt die Info aus einer Datei heraus an.
+
+19. Soft-Links
+Soft Links sind symbolische Links, d.h. Aliase für die Ressource, auf die sie
+zeigen.
+Soft Links können auf Dateien oder auf Verzeichnisse zeigen.
+Der Kurzname SymLink steht für Sybolic Link.
+SymLinks können Filesysteme überspannen. Das können Hard Links nicht.
+Die Syntax zum Erzeugen eines SymLinks sieht wie folgt aus:
+--------------------------------------------------------------------
+ln -s <Ressource> <Name des SymLinks>
+   -s erzeugt einen SymLink (per Default wird ein HardLink erstellt)
+ln -s /media/fritz/FRITZ/Mule/Linux naslinux
+---------------------------------------------------------------------
+Der obige Befehl legt einen SymLink auf das Linux-Verzeichnis in meinem NAS 
+an.
+Mit cd naslinux bin ich direkt in dem Verzeichnis.
+Der Promt sieh dann wie folgt aus:
+volker@debian:~/naslinux$
+
+20. Hostname ändern
+Den Hostname des Pis ändert man in 3 Schritten:
+- Namen in die Datei /etc/hostname eintragen
+  sudo vi /etc/hostname
+- Namen in der Datei /etc/hosts ändern
+  sudo vi /etc/hosts
+- Den Hostname-Prozess neu starten
+  Dafür gibt es zwei Möglichkeiten:
+  - einfach neu booten
+    sudo shutdown -r now oder sudo reboot
+  - den Dienst manuel neu starten
+    sudo /etc/init.d/hostname.sh start
+
+21. Komplette Verzeichnisse rekursiv löschen
+Das leistet der Befehl rm
+-------------------------------
+sudo rm -r -f java
+     löscht das Verzeichnis java und alle Unterverzeichnisse ohne nachzufragen
+     -r löscht rekursiv alle Unterverzeichnisse, auch wenn noch Dateien darin
+        liegen
+     -f force, fürhrt dazu, dass nicht mehr nachgefragt wird.
+-------------------------------------------------------------
+
+22. Umgebunsvariablen (Environment)
+Den inhalt einer Umgebungsvariablen kann man sehen, wenn man in der Konsole 
+ein $ voranstellt:
+----------------------------------------
+$PATH
+zeigt den Inhalt der PATH-Variable an
+--------------------------------------
+
+23. Virtuelle Konsolen
+Virtuelle Konsolen
+Debian unterstützt 6 virtuelle Konsolen.
+Die erreicht man mit Alt-F1 bis Alt-F6.
+XWindows wird automatisch in der virtuellen Konsole 7 angelegt.
+Um von XWindows auf die Konsole 1 zu kommen, drückt man Strg-Alt-F1
+Zurück zu XWindows geht es mit Alt-F1.
+
+===============================================================================
+24. Accounts verwalten
+===============================================================================
+Verschiedene Aktivitäten, die regelmäßig bei der Verwaltung von User-Accounts
+anfallen:
+
+Info zu einem Account bekommen
+------------------------------
+- um Info zum aktuellen User zu bekommen, bentzt man 
+  useradd -D
+  Displays Information of the current account
+
+Passwords ändern
+----------------
+- geht mit dem Befehl passwd:
+  sudo passwd couchdb
+  danach fragt Linux nach dem Passwort
+
+
+===============================================================================
+25. Verzeichnis anlegen
+===============================================================================
+geht mit dem Befehl mkdir (make Directory)
+----------------------
+mkdir <directory name>
+mkdir test
+----------------------
+
+===============================================================================
+26. Dateien kopieren
+===============================================================================
+Dateien und Verzeichnisse kopieren geht mit dem Befehl cp (copy).
+
+
+===============================================================================
+27. Kommandos verknüpfen
+===============================================================================
+- ohne Beachtung des Exit-Codes
+Hier werden die Befehle einfach per ";" miteinander verknüpft.
+- der Rückgabewert des ersten Befehls wird ignoriert
+- der nachfolgende Befehl wird bedingungslos ausgeführt
+
+- mit Beachtung des Exit-Codes
+if ... then ... else ...
+- der erste Befehl kommt nach dem if
+- der zweite Befehl kommt nach dem then
+- in den else-Teil komm die Fehlerbehandlng
+
+Dafür gibt esa auch eine Kurzform:
+- &&: wenn exitcode==0 dann ...
+- ||: wenn exitcode <> 0 dann ...
+
+
+

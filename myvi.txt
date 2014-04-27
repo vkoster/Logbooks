@@ -1,0 +1,72 @@
+When opening a file, vi is in Normal Mode.to go to the beginning of the file
+From here we can:
+
+Navigate the file:
+o navigate with the arrow keys
+o press hjkl left-down-up-right
+o press w to get to the next word
+o press b to go back one word
+o press 0 to go to the beginning of the current line 
+o press $ to go to the end of the curent line
+o press <n>G to Goto line n
+o press G to go to the last line of the file
+o press 1G to go to the beginning of the file
+
+Insert something
+o press I to change into Insert-Mode at the beginning of a line
+o press i to enter Insert-Mode at current cursor position
+o press o to open a new line
+o press a to append text
+
+Replace something
+o press R to change into Replace-Mode
+
+Delete something
+o press x to delete current character
+o press <n>x to delete n characters
+o press dw to delete the next word
+o press <n>dw to delete the next word
+o press dd to delete a line
+o press <n>dd to delete n lines
+
+Join something
+o press J to join current line with next line
+o press <n>J to join next n lines to current line
+
+Copy and past/Yank and put
+o the last delete action is in the buffer
+o press p to paste the buffer after the cursor
+o press P to paste the buffer above the cursor
+o press yw to yank a word
+o press <n>yw to yank n words
+o press yy to yank current line
+o press nyy or yny to yank the next n lines (incl. current)
+o press y$ to yank from cursor to end of line
+o press yG to yank from cursor to end of file
+
+Change something
+o press <n>cw to change n words: delete and retype them
+
+Search something
+o press /<text> to enter a search string
+o press n to find the occurance of the search string
+
+And the Rest
+o press . to repeat the last change
+o press u to undo the last edit
+
+Command (always press :<command><enter>)
+o press : to change into Command-Mode to enter a command
+o press :w to write the file
+o press :wq to write the file and quit vi
+o press :q! to quit without saving
+
+
+
+
+ 
+
+
+
+
+

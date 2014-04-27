@@ -1,0 +1,169 @@
+===============================================================================
+Logbuch couchDB
+===============================================================================
+
+===============================================================================
+CouchDB installieren
+===============================================================================
+CouchDB kann man auf zwei Arten installieren:
+- compile from source (recht aufwendig, mache ich erstmal nicht)
+- Debian package mit apt-get installieren (mach ich)
+
+CouchDB mit apt-get installieren
+--------------------------------
+Funktioniert sehr gut, hat aber ein Problem: die Debian Pakete hängen der
+aktuellen Version der couchDB deutlich hinterher.
+Es gibt schon ein Version 1.3 während die aktuelle Version für Debian die
+Version 1.2.0-5 ist (aber die ist mal garnicht so schlecht :-)
+
+- Das Package finden
+  Suche nach couchDB für Linux Debian liefert: Paket: couchdb (1.2.0-5)
+- Paket installieren
+  sudo apt-get install couchdb
+  danach hat man die couchDB auf dem System und sie läuft sogar
+
+===============================================================================
+CouchDB auf dem Pi
+===============================================================================
+Führt man apt-get auf dem Pi aus, hat man auch eine sofort laufende couchDB
+auf dem Pi.
+Erlang wird in der passenden Version direkt mitinstalliert.
+
+CouchDB Init-Files
+------------------
+Die init files der couchDB liegen in diesem Verzeichnis:
+/etc/couchdb/
+- default.ini
+- local.ini
+genau in der Reihenfolge ließt couchDB die Dateien auch ein. D.h. Einstellungen
+aus local.ini könne die Einstellungen aus default.ini überschreiben.
+Einstellungen, die man im Falle eines Updates nicht verlieren will, sollte man
+in local.ini durchführen.
+In dem Verzeichnis gibt es noch zwie weitere Verzeichnisse:
+/etc/couchdb/default.d/
+- das Verzeichnis ist leer
+/etc/couchdb/local.d/
+- das Verzeichnis ist auch leer
+
+The default.ini File
+--------------------
+Was kann man alles aus dem default.ini File herauslesen?
+- unter [couchdb] findet man Einstellungen zur DB:
+  - database_dir = /var/lib/couchdb/1.2.0
+- unter [httpd] konfiguriert man die Erreichbarkeit der couchDB
+  - port = 5984
+  - bind_address = <meine IP Adresse>
+- unter [log] findet man Einstellungen zum Logging
+  - file = /var/log/couchdb/couchdb.log
+  - level = info
+
+The local.ini File
+------------------
+Hier kann man die Einstellungen uas default.ini noch mal überschreiben.
+Initial ist dieses File fast vollständig auskommentiert.
+
+CouchDB als Daemon starten
+--------------------------
+Das Skript zum automatischen Starten der CouchDB befindet sich (wie bei allen 
+Daemon-Skripten ) im /etc/init.d/ Verzeichnis.
+Es ist folgenden Runleveln zugeordnet:
+
+Problem mit dem Daemon
+----------------------
+Ein altes Problem ist, dass sich die Datenbank über den service-BEfehl nicht 
+stoppen läßt.
+Ein Blog vermutet das problem in einer "Re-Spawn" Option (-r) 
+Er hat diesen BEfehl aus dem couchdb-Skript entfernt und angeblich das Problem gelöst.
+Bei mir war das Problem nach einem Re-Boot des Betriebssystems verschwunden.
+
+Prüfen, ob couchDB läuft
+---------------------------
+- kann man z.B. mit dem ps Befehl in Kombination mit grep machen:
+  ps -A | grep couch
+  -A zeigt alles an
+  | piped den Output von PS nach grep
+  couch ist der Befriff, nach dem grep suchen soll
+sieht dann so aus:
+pi@frodo ~ $ ps -A |grep couch
+ 3711 ?        00:00:00 couchdb
+ 3731 ?        00:00:00 couchdb
+pi@frodo ~ $
+
+
+================================================================================
+Mit der CouchDB arbeiten
+================================================================================
+
+Mit curl arbeiten
+-----------------
+Von einem Windows Client aus arbeiten
+- ich arbeite von meinem Windows Home-Verzeichnis aus
+- dort platziere ich ein Version von curl
+
+- Die coucdb ansprechen:
+curl http://frodo:5984/
+C:\Users\vkoster>curl http://frodo:5984/
+{"couchdb":"Welcome","version":"1.2.0"}
+
+- alle Datenbanken anzeigen
+curl -X GET http://frodo:5984/_all_dbs
+["_replicator","_users"]
+Überraschung: zwei Datenbanken wurden schon bei der Installation angelegt:
+o _replicator
+o _users  
+
+- mit der -v Option zeigt curl sehr viel mehr Information an /(HTTP-Request, 
+  HTTP-Header, Response etc.)
+C:\Users\vkoster>
+C:\Users\vkoster>curl -vX GET http://frodo:5984/_all_dbs
+* About to connect() to frodo port 5984 (#0)
+*   Trying 192.168.178.32...
+* connected
+* Connected to frodo (192.168.178.32) port 5984 (#0)
+> GET /_all_dbs HTTP/1.1
+> User-Agent: curl/7.28.1
+> Host: frodo:5984
+> Accept: */*
+>
+< HTTP/1.1 200 OK
+< Server: CouchDB/1.2.0 (Erlang OTP/R15B01)
+< Date: Sun, 06 Oct 2013 12:07:16 GMT
+< Content-Type: text/plain; charset=utf-8
+< Content-Length: 25
+< Cache-Control: must-revalidate
+<
+["_replicator","_users"]
+* Connection #0 to host frodo left intact
+* Closing connection #0
+
+- Neue Datenbank anlegen
+  Das geht mit einem PUT-Request:
+curl -X PUT http://frodo:5984/musik
+{"ok":true}
+curl -X GET http://frodo:5984/_all_dbs
+["_replicator","_users","musik"]
+- Dattenbank löschen
+  erst mall ein DB zum Löschen anlegen
+curl -X PUT http://frodo:5984/crap
+{"ok":true}
+curl -X GET http://frodo:5984/_all_dbs
+["_replicator","_users","crap","musik"]
+  dann wieder löschen 
+curl -X DELETE http://frodo:5984/crap
+{"ok":true}
+curl -X GET http://frodo:5984/_all_dbs
+["_replicator","_users","musik"]
+
+- Futon starten
+Futon ist eine Browser basierte Oberfläche für CouchDB.
+Man erreicht die Anwendng über folgenden Link:
+  http://frodo:5984/_utils/
+
+
+
+-
+
+
+
+
+
